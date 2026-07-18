@@ -212,7 +212,6 @@ async function loadSiswa(){
 
     }catch(err){
 
-        alert("Gagal mengambil data siswa");
 
     }
 }
@@ -266,9 +265,6 @@ document.getElementById(
 
 if(!mapel){
 
-    alert(
-        "Pilih mapel terlebih dahulu"
-    );
 
     return;
 
@@ -281,9 +277,6 @@ document.getElementById(
 
 if(!tanggal){
 
-    alert(
-        "Pilih tanggal terlebih dahulu"
-    );
 
     return;
 
@@ -312,11 +305,9 @@ const data = {
         });
 
         await res.text();
-alert("Nilai berhasil disimpan");
 
     }catch(err){
 
-        alert("Gagal menyimpan");
 
     }
 
@@ -345,18 +336,12 @@ document.getElementById(
 
 if(!mapel){
 
-    alert(
-        "Pilih mapel terlebih dahulu"
-    );
 
     return;
 
 }
     if(!kelas){
 
-        alert(
-            "Pilih kelas terlebih dahulu"
-        );
 
         return;
     }
@@ -385,16 +370,10 @@ await fetch(
 
         });
 
-Android.downloadCSV(
-    csv,
-    "Nilai_" + mapel + "_" + kelas + ".csv"
-);
+Android.downloadCSV(csv);
 
     }catch(err){
 
-        alert(
-            "Gagal mengunduh rekap"
-        );
 
     }
 
