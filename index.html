@@ -293,9 +293,29 @@ const data = {
 
     tanggal:
     document.getElementById("tanggal").value,
-
+    
     nilai:
-    dataSiswa
+    dataSiswa,
+
+    deviceId :
+(
+    window.Android &&
+    typeof Android.getDeviceId === "function"
+)
+?
+Android.getDeviceId()
+:
+"",
+
+deviceName :
+(
+    window.Android &&
+    typeof Android.getDeviceName === "function"
+)
+?
+Android.getDeviceName()
+:
+""
 
 };
 
