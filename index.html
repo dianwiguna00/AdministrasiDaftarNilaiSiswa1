@@ -98,6 +98,11 @@ th.sticky-no{
     text-align:center;
 }
 
+    .btn-aktif{
+    background:#198754 !important;
+    color:white !important;
+    transition:0.3s;
+}
 </style>
 </head>
 <body>
@@ -155,11 +160,11 @@ th.sticky-no{
 
 <input type="date" id="tanggal">
 
-<button onclick="simpan()">
+<button id="btnSimpan" onclick="simpan()">
 💾 Simpan
 </button>
 
-<button onclick="downloadCSV()">
+<button id="btnDownload" onclick="downloadCSV()">
 📥 Download
 </button>
 
@@ -324,7 +329,9 @@ Android.getDeviceName()
             body:JSON.stringify(data)
         });
 
-        await res.text();
+await res.text();
+
+flashButton("btnSimpan");
 
     }catch(err){
 
@@ -340,7 +347,18 @@ window.onload = function(){
 
     loadSiswa();
 }
+function flashButton(id){
 
+    const btn =
+    document.getElementById(id);
+
+    btn.classList.add("btn-aktif");
+
+    setTimeout(()=>{
+        btn.classList.remove("btn-aktif");
+    },5000);
+
+}
 // ================= DOWNLOAD =================
 async function downloadCSV(){
 
@@ -391,6 +409,8 @@ await fetch(
         });
 
 Android.downloadCSV(csv);
+
+flashButton("btnDownload");
 
     }catch(err){
 
