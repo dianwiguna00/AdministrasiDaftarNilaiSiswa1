@@ -262,7 +262,7 @@ function setNilai(i,nilai){
 }
 
 async function simpan(){
-
+flashButton("btnSimpan");
 let mapel =
 document.getElementById(
     "mapel"
@@ -331,7 +331,6 @@ Android.getDeviceName()
 
 await res.text();
 
-flashButton("btnSimpan");
 
     }catch(err){
 
@@ -361,7 +360,7 @@ function flashButton(id){
 }
 // ================= DOWNLOAD =================
 async function downloadCSV(){
-
+flashButton("btnDownload");
     let kelas =
     document.getElementById(
         "kelas"
@@ -409,8 +408,6 @@ await fetch(
         });
 
 Android.downloadCSV(csv);
-
-flashButton("btnDownload");
 
     }catch(err){
 
