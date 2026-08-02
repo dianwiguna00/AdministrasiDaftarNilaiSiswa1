@@ -3,86 +3,116 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Perpustakaan Sekolah</title>
+<title>Input Nilai Siswa</title>
 
 <style>
 
 body{
-    font-family:Arial, sans-serif;
+    font-family:Arial;
     padding:20px;
     background:#f3f5f8;
 }
 
-h2,h3{
-    margin:10px 0;
-}
-
 .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
     margin-bottom:10px;
 }
 
-input,
-button,
-select{
-    padding:8px;
-    font-size:18px;
-    margin:3px;
+.toolbar select,
+.toolbar input{
+    height:48px;
+    font-size:20px;
+    padding:0 8px;
+}
+
+.toolbar button{
+    height:48px;
+    padding:0 8px;
+    font-size:20px;
+    white-space:nowrap;
 }
 
 button{
     cursor:pointer;
 }
 
+/* Container scroll */
+.table-container{
+    overflow:auto;
+    max-width:100%;
+    max-height:80vh;
+}
+
 table{
-    width:100%;
     border-collapse:collapse;
-    background:white;
-    margin-top:10px;
+    width:auto;
 }
 
 th,
 td{
     border:1px solid #ccc;
-    padding:8px;
+    padding:6px 8px;
+    white-space:nowrap;
+    text-align:center;
+    font-size:22px;
 }
 
+/* Header terkunci */
 th{
     background:#0d6efd;
     color:white;
+    position:sticky;
+    top:0;
+    z-index:10;
 }
 
-.item-siswa{
-    padding:8px;
-    border:1px solid #ccc;
+.nama{
+    text-align:left;
+    padding-left:8px;
+    font-size:22px;
+}
+
+/* Kolom No terkunci */
+.sticky-no{
+    position:sticky;
+    left:0;
     background:white;
-    cursor:pointer;
+    z-index:5;
 }
 
-.item-siswa:hover{
-    background:#eeeeee;
+/* Perpotongan header dan kolom No */
+th.sticky-no{
+    left:0;
+    top:0;
+    background:#0d6efd;
+    color:white;
+    z-index:20;
 }
 
-#hasilSiswa{
-    margin-top:5px;
-    margin-bottom:10px;
+.nilai{
+    width:80px;
+    height:32px;
+    font-size:22px;
+    text-align:center;
 }
 
+    .btn-aktif{
+    background:#198754 !important;
+    color:white !important;
+    transition:0.3s;
+}
 </style>
 </head>
 <body>
 
-<h2>📚 PERPUSTAKAAN SEKOLAH</h2>
+<h2>INPUT NILAI SISWA</h2>
 
 <div class="toolbar">
-
-<select
-id="kelasCari"
-onchange="cariSiswa()">
-
-<option value="">
-Pilih Kelas
-</option>
-
+<select id="kelas" onchange="loadSiswa()">
+<option value="">Pilih Kelas</option>
 <option>7A</option>
 <option>7B</option>
 <option>7C</option>
@@ -101,7 +131,6 @@ Pilih Kelas
 <option>8F</option>
 <option>8G</option>
 <option>8H</option>
-<option>8I</option>
 
 <option>9A</option>
 <option>9B</option>
@@ -112,468 +141,281 @@ Pilih Kelas
 <option>9G</option>
 <option>9H</option>
 <option>9I</option>
-
+</select>
+<select id="mapel">
+<option value="">Pilih Mapel</option>
+<option>Pendidikan Agama</option>
+<option>Bahasa Indonesia</option>
+<option>Pendidikan Pancasila</option>
+<option>Matematika</option>
+<option>IPA</option>
+<option>IPS</option>
+<option>Bahasa Inggris</option>
+<option>Informatika</option>
+<option>PJOK</option>
+<option>Seni Budaya</option>
+<option>Prakarya</option>
+<option>Bahasa Jawa</option>
+<option>BK</option>
 </select>
 
-<input
-type="text"
-id="cariNama"
-placeholder="Cari nama siswa..."
-onkeyup="cariSiswa()">
+<input type="date" id="tanggal">
 
-<input
-type="date"
-id="tanggal">
-
-</div>
-
-<div id="hasilSiswa"></div>
-
-<hr>
-
-<input id="nis" placeholder="NIS" readonly>
-<input id="namaSiswa" placeholder="Nama Siswa" readonly>
-<input id="kelas" placeholder="Kelas" readonly>
-
-<h3>Pilih Buku Pelajaran</h3>
-
-<table>
-
-<thead>
-<tr>
-<th>No</th>
-<th>Mata Pelajaran</th>
-<th>Pilih</th>
-</tr>
-</thead>
-
-<tbody id="tbody">
-</tbody>
-
-</table>
-
-<br>
-
-<button onclick="pinjam()">
-📚 Simpan Peminjaman
+<button id="btnSimpan" onclick="simpan()">
+💾 Simpan
 </button>
 
-<hr>
+<button id="btnDownload" onclick="downloadCSV()">
+📥 Unduh Data
+</button>
 
-<h3>Buku Yang Sedang Dipinjam</h3>
-
+</div>
+<div style="overflow:auto">
+<div class="table-container">
 <table>
 
 <thead>
 <tr>
-<th>No</th>
-<th>Tanggal Pinjam</th>
-<th>Mapel</th>
-<th>Aksi</th>
+<th class="sticky-no">No</th>
+<th>NIS</th>
+<th>Nama</th>
+<th>L/P</th>
+<th>Nilai</th>
 </tr>
 </thead>
 
-<tbody id="pinjamanBody">
-</tbody>
+<tbody id="tbody"></tbody>
 
 </table>
+</div>
+</div>
 
 <script>
 
 const API =
-"https://script.google.com/macros/s/AKfycby_WenAO6SoFmmZk4p_i6FnkudoE_oWXxaJU8Ox-3FljqUnb-2lUAGKUUV5pLaKaCkvdA/exec";
+"https://script.google.com/macros/s/AKfycbz7FgvbOCUq9ijrPRtoT95wvi2BJrQlQazhWaGOFiiSgYiocGigrTA2V4vqGFZsCXg9/exec";
 
-let dataMapel = [];
+let dataSiswa = [];
 
-/* ===================================
-   LOAD MAPEL
-=================================== */
+async function loadSiswa(){
 
-async function loadMapel(){
+    try{
 
-    const res =
-    await fetch(API + "?mapel=1");
+        const kelas =
+        document.getElementById("kelas").value;
 
-    dataMapel =
-    await res.json();
+        const res =
+        await fetch(API + "?kelas=" + kelas);
 
-    dataMapel.forEach(m=>{
+        dataSiswa =
+        await res.json();
 
-        m.pilih = false;
+        dataSiswa.forEach(s=>{
+            s.nilai = "";
+        });
 
-    });
+        render();
 
-    renderMapel();
+    }catch(err){
 
+
+    }
 }
 
-/* ===================================
-   TAMPILKAN MAPEL
-=================================== */
-
-function renderMapel(){
+function render(){
 
     let html = "";
 
-    dataMapel.forEach((m,i)=>{
+    dataSiswa.forEach((s,i)=>{
 
         html += `
         <tr>
 
-        <td>${i+1}</td>
+        <td class="sticky-no">${s.no}</td>
 
-        <td>${m.mapel}</td>
+        <td>${s.nis}</td>
+
+        <td class="nama">${s.nama}</td>
+
+        <td>${s.jk}</td>
 
         <td>
-
-        <input
-        type="checkbox"
-        onchange="pilihMapel(${i},this.checked)">
-
+            <input
+                type="number"
+                min="0"
+                max="100"
+                class="nilai"
+                value="${s.nilai}"
+                onchange="setNilai(${i},this.value)">
         </td>
 
         </tr>
         `;
-
     });
 
-    document.getElementById("tbody")
-    .innerHTML = html;
+    document.getElementById("tbody").innerHTML = html;
+}
+
+function setNilai(i,nilai){
+
+    dataSiswa[i].nilai = nilai;
 
 }
 
-/* ===================================
-   PILIH MAPEL
-=================================== */
+async function simpan(){
+flashButton("btnSimpan");
+let mapel =
+document.getElementById(
+    "mapel"
+).value;
 
-function pilihMapel(i,status){
+if(!mapel){
 
-    dataMapel[i].pilih =
-    status;
 
-}
-
-/* ===================================
-   CARI SISWA
-=================================== */
-
-async function cariSiswa(){
-
-    let kelas =
-    document.getElementById(
-    "kelasCari"
-    ).value;
-
-    if(!kelas){
-        return;
-    }
-
-    let nama =
-    document.getElementById(
-    "cariNama"
-    ).value;
-
-    const res =
-    await fetch(
-
-        API +
-
-        "?kelas=" +
-
-        encodeURIComponent(kelas) +
-
-        "&nama=" +
-
-        encodeURIComponent(nama)
-
-    );
-
-    const data =
-    await res.json();
-
-    let html = "";
-
-    data.forEach(s=>{
-
-        html += `
-
-        <div
-        class="item-siswa"
-        onclick="
-        pilihSiswa(
-        '${s.nis}',
-        '${s.nama}',
-        '${s.kelas}'
-        )">
-
-        <b>${s.nama}</b><br>
-
-        NIS : ${s.nis}
-
-        </div>
-
-        `;
-
-    });
-
-    document.getElementById(
-    "hasilSiswa"
-    ).innerHTML =
-    html;
+    return;
 
 }
 
-/* ===================================
-   PILIH SISWA
-=================================== */
+let tanggal =
+document.getElementById(
+    "tanggal"
+).value;
 
-function pilihSiswa(
-nis,
-nama,
-kelas
-){
+if(!tanggal){
 
-    document.getElementById("nis")
-    .value = nis;
 
-    document.getElementById("namaSiswa")
-    .value = nama;
-
-    document.getElementById("kelas")
-    .value = kelas;
-
-    document.getElementById(
-    "hasilSiswa"
-    ).innerHTML = "";
-
-    tampilPinjaman(
-        nis,
-        kelas
-    );
+    return;
 
 }
+    try{
 
-/* ===================================
-   SIMPAN PEMINJAMAN
-=================================== */
+const data = {
 
-async function pinjam(){
+    mapel:
+    document.getElementById("mapel").value,
 
-    let mapelDipilih =
-    dataMapel.filter(
-        m => m.pilih
-    );
+    kelas:
+    document.getElementById("kelas").value,
 
-    if(!document.getElementById("nis").value){
+    tanggal:
+    document.getElementById("tanggal").value,
+    
+    nilai:
+    dataSiswa,
 
-        alert(
-        "Pilih siswa terlebih dahulu"
-        );
+    deviceId :
+(
+    window.Android &&
+    typeof Android.getDeviceId === "function"
+)
+?
+Android.getDeviceId()
+:
+"",
 
-        return;
+deviceName :
+(
+    window.Android &&
+    typeof Android.getDeviceName === "function"
+)
+?
+Android.getDeviceName()
+:
+""
+
+};
+
+        const res = await fetch(API,{
+            method:"POST",
+            body:JSON.stringify(data)
+        });
+
+await res.text();
+
+
+    }catch(err){
+
 
     }
 
-    if(mapelDipilih.length===0){
-
-        alert(
-        "Pilih mapel"
-        );
-
-        return;
-
-    }
-
-    const data = {
-
-        aksi:"pinjam",
-
-        tanggal:
-        document.getElementById(
-        "tanggal").value,
-
-        nis:
-        document.getElementById(
-        "nis").value,
-
-        nama:
-        document.getElementById(
-        "namaSiswa").value,
-
-        kelas:
-        document.getElementById(
-        "kelas").value,
-
-        mapel:
-        mapelDipilih
-
-    };
-
-    await fetch(API,{
-
-        method:"POST",
-
-        body:
-        JSON.stringify(data)
-
-    });
-
-    alert(
-    "Peminjaman berhasil disimpan"
-    );
-
-    tampilPinjaman(
-        data.nis,
-        data.kelas
-    );
-
 }
-
-/* ===================================
-   DAFTAR PINJAMAN
-=================================== */
-
-async function tampilPinjaman(
-nis,
-kelas
-){
-
-    const res =
-    await fetch(
-
-        API +
-
-        "?aksi=riwayat" +
-
-        "&nis=" +
-
-        encodeURIComponent(nis) +
-
-        "&kelas=" +
-
-        encodeURIComponent(kelas)
-
-    );
-
-    const data =
-    await res.json();
-
-    let html = "";
-
-    data.forEach((d,i)=>{
-
-        html += `
-
-        <tr>
-
-        <td>${i+1}</td>
-
-        <td>${d.tanggal}</td>
-
-        <td>${d.mapel}</td>
-
-        <td>
-
-        <button
-        onclick="
-        kembalikanSatu(
-            ${d.row},
-            '${d.mapel}'
-        )">
-
-        Kembalikan
-
-        </button>
-
-        </td>
-
-        </tr>
-
-        `;
-
-    });
-
-    document.getElementById(
-    "pinjamanBody"
-    ).innerHTML = html;
-
-}
-
-/* ===================================
-   KEMBALIKAN SATU BUKU
-=================================== */
-
-async function kembalikanSatu(
-row,
-mapel
-){
-
-    if(
-        !confirm(
-        "Kembalikan buku "
-        + mapel +
-        " ?"
-        )
-    ){
-        return;
-    }
-
-    const data = {
-
-        aksi:
-        "kembalikanSatu",
-
-        row:
-        row,
-
-        kelas:
-        document.getElementById(
-        "kelas").value,
-
-        tanggal:
-        document.getElementById(
-        "tanggal").value
-
-    };
-
-    await fetch(API,{
-
-        method:"POST",
-
-        body:
-        JSON.stringify(data)
-
-    });
-
-    tampilPinjaman(
-
-        document.getElementById(
-        "nis").value,
-
-        document.getElementById(
-        "kelas").value
-
-    );
-
-}
-
-/* ===================================
-   ON LOAD
-=================================== */
 
 window.onload = function(){
 
+    document.getElementById("tanggal").value =
+    new Date().toISOString().split("T")[0];
+
+    loadSiswa();
+}
+function flashButton(id){
+
+    const btn =
+    document.getElementById(id);
+
+    btn.classList.add("btn-aktif");
+
+    setTimeout(()=>{
+        btn.classList.remove("btn-aktif");
+    },5000);
+
+}
+// ================= DOWNLOAD =================
+async function downloadCSV(){
+flashButton("btnDownload");
+    let kelas =
     document.getElementById(
-    "tanggal"
-    ).value =
+        "kelas"
+    ).value;
 
-    new Date()
-    .toISOString()
-    .split("T")[0];
+let mapel =
+document.getElementById(
+    "mapel"
+).value;
 
-    loadMapel();
+if(!mapel){
 
-};
+
+    return;
+
+}
+    if(!kelas){
+
+
+        return;
+    }
+
+    try{
+
+        let response =
+
+await fetch(
+    API +
+    "?rekap=" +
+    encodeURIComponent(kelas) +
+    "&mapel=" +
+    encodeURIComponent(mapel)
+);
+
+        let data =
+        await response.json();
+
+        let csv = "";
+
+        data.forEach(row=>{
+
+            csv +=
+            row.join(";") + "\n";
+
+        });
+
+Android.downloadCSV(csv);
+
+    }catch(err){
+
+
+    }
+
+}
 
 </script>
 
